@@ -1,8 +1,6 @@
 
 from django.shortcuts import render, redirect
-from app01.utils.form import UserModelForm,numform
 from app01 import models
-from app01.utils.pagination import Pagination
 
 
 # Create your views here.
@@ -36,3 +34,20 @@ def depart_edit(req, nid):
     title = req.POST.get('title')
     models.Department.objects.filter(id=nid).update(title=title)
     return redirect("/depart/list")
+
+from openpyxl import load_workbook
+def depart_multi(req):
+    """批量上传基于Excel"""
+    #获取用户上传的文件对象
+    file_obj = req.Files.get("exc")
+    #读取文件内容
+    wb = load_workbook(file_obj)
+    sheet = wb.worksheets[0]
+    #循环获取每一行数据
+    for row in sheet.iter_rows(min_row=2):
+        text = row[0]
+        exists = models.Department.objects.filter(title=text).exists()
+        if not exists:
+            models.Department.objects.create(title = text)
+
+        return redirect('/depart/list/')
